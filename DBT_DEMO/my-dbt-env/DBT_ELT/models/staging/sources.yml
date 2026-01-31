@@ -1,9 +1,14 @@
 version: 2
 
 sources:
-    - name: my_dbt_db
-      schema: my_dbt_db
+  - name: my_dbt_db       # C'est le nom que tu utilises dans {{ source('my_dbt_db', ...) }}
+    description: "Mes données brutes importées depuis le CSV ou la base de données."
+    #database: my_dbt_db   # Le vrai nom de ta base de données dans MySQL
+    schema: my_dbt_db     # (Optionnel si identique au nom de la base, mais bonne pratique)
+    
+    tables:
+      - name: raw_customers
+        description: "Table brute contenant les infos clients."
 
-      tables:
-        - name: raw_customers
-        - name: raw_orders
+      - name: raw_orders
+        description: "Table brute contenant les commandes."

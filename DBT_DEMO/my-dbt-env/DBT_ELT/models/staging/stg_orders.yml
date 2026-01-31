@@ -1,7 +1,54 @@
 version: 2
 
 models:
-    - name: stg_orders
-      columns:
-        - name: customer_id
-        - name: date_ordres
+  - name: stg_orders
+    description: "Table de staging des commandes nettoyée et standardisée."
+    columns:
+      - name: order_id
+        description: "Clé primaire unique de la commande."
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_id
+        description: "Clé étrangère reliant la commande au client."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+
+      - name: order_date
+        description: "Date et heure de la commande (UTC)."
+        tests:
+          - not_null
+
+      - name: status
+        description: "Statut de la commande (ex: placed, shipped, completed)."
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+
+      - name: store_id
+        # Utilisation de ton Doc Block
+        description: '{{ doc("store_id_description") }}'
+      
+      # --- NOUVELLES COLONNES AJOUTEES ---
+      - name: subtotal
+        description: "Montant de la commande hors taxes, exprimé en centimes."
+        tests:
+          - not_null
+          # On vérifie que le montant n'est jamais négatif
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: tax_paid
+        description: "Montant de la TVA payée sur la commande, exprimé en centimes."
+
+      - name: order_total
+        description: "Montant total payé (Sous-total + Taxes), exprimé en centimes."
+        tests:
+          - not_null
+          # Petit test bonus : le total doit être égal à la somme des parties !
+          - dbt_utils.expression_is_true:
+              expression: "= subtotal + tax_paid"
